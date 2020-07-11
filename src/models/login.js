@@ -1,108 +1,107 @@
+import cookie from "react-cookie";
+import { onlogin } from "../services/login";
+import MD5 from "crypto-js/md5";
 
-
-import cookie from 'react-cookie';
-import { onlogin } from '../services/login';
-import MD5 from 'crypto-js/md5';
-
-import { isApiSuccess, apiData } from '../utils/utils';
+import { isApiSuccess, apiData } from "../utils/utils";
 
 export default {
-  namespace: 'login',
+  namespace: "login",
   state: {
     loading: false,
     isLogin: false,
     hasError: false,
     errorMsg: null,
-    username: null
+    username: null,
   },
 
   subscriptions: {
-    setup({ dispatch, history }) { // 查询cookie中保存的用户名,accessToken
+    setup({ dispatch, history }) {
+      // 查询cookie中保存的用户名,accessToken
       history.listen(({ pathname }) => {
-        if (pathname === '/') {
+        if (pathname === "/") {
           dispatch({
-            type: 'loadCookie',
+            type: "loadCookie",
             payload: {
-              cookieName: 'login_name'
-            }
+              cookieName: "login_name",
+            },
           });
         }
       });
-    }
+    },
   },
 
   effects: {
-    * onLogin({ payload }, { call, put }) {
+    *onLogin({ payload }, { call, put }) {
       yield put({
-        type: 'setLoadingState',
+        type: "setLoadingState",
         payload: {
-          loading: true
-        }
+          loading: true,
+        },
       });
       const { username, password, remember } = payload;
-console.log('登录')
-      const pwdMD5 = MD5(password).toString();  // MD5值是5f4dcc3b5aa765d61d8327deb882cf99
+      console.log("登录");
+      const pwdMD5 = MD5(password).toString(); // MD5值是5f4dcc3b5aa765d61d8327deb882cf99
 
       const response = yield call(onlogin, {
         username,
         remember,
-        password: pwdMD5
+        password: pwdMD5,
       });
       if (isApiSuccess(response)) {
         yield put({
-          type: 'loginSuccess',
+          type: "loginSuccess",
           payload: {
             isLogin: true,
-            username
-          }
+            username,
+          },
         });
       } else {
         yield put({
-          type: 'setLoadingState',
+          type: "setLoadingState",
           payload: {
-            loading: false
-          }
+            loading: false,
+          },
         });
         yield put({
-          type: 'loginFailed',
+          type: "loginFailed",
           payload: {
             isLogin: false,
             hasError: true,
-            errorMsg: '用户名密码错误!'
-          }
+            errorMsg: "用户名密码错误!",
+          },
         });
       }
     },
-    * onOk({ payload }, { put }) {
+    *onOk({ payload }, { put }) {
       yield put({
-        type: 'resetState',
+        type: "resetState",
         payload: {
           hasError: payload.hasError,
-          errorMsg: payload.errorMsg
-        }
+          errorMsg: payload.errorMsg,
+        },
       });
     },
-    * loadCookie({ payload }, { put }) {
+    *loadCookie({ payload }, { put }) {
       const { cookieName } = payload;
 
       const userName = cookie.load(cookieName) ? cookie.load(cookieName) : null;
 
       yield put({
-        type: 'loadLocalCookie',
+        type: "loadLocalCookie",
         payload: {
-          username: userName
-        }
+          username: userName,
+        },
       });
     },
-    * clearMsg({ payload }, { put, call }) {
+    *clearMsg({ payload }, { put, call }) {
       yield put({
-        type: 'loginFailed',
+        type: "loginFailed",
         payload: {
           hasError: false,
-          errorMsg: ''
-        }
+          errorMsg: "",
+        },
       });
-    }
+    },
   },
 
   reducers: {
@@ -121,8 +120,6 @@ console.log('登录')
     },
     setLoadingState(state, action) {
       return { ...state, ...action.payload };
-    }
-
-  }
-
+    },
+  },
 };
